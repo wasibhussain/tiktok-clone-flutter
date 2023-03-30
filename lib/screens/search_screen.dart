@@ -43,7 +43,11 @@ class _SearchScreenState extends State<SearchScreen> {
             actions: [
               IconButton(
                   onPressed: () {
-                    searchController.searchUser(searchedText.text);
+                    if (searchedText.text.isNotEmpty) {
+                      searchController.searchUser(searchedText.text);
+                    } else {
+                      return;
+                    }
                   },
                   icon: const Icon(Icons.search))
             ],
@@ -53,7 +57,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   child: Text(
                     'Search for users!',
                     style: TextStyle(
-                        fontSize: 25,
+                        fontSize: 18,
                         color: Colors.white,
                         fontWeight: FontWeight.bold),
                   ),

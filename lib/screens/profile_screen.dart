@@ -148,7 +148,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     widget.uid == firebaseAuth.currentUser!.uid
                                         ? 'Sign Out'
                                         : controller.user['isFollowing']
-                                            ? 'UnFollow'
+                                            ? 'Unfollow'
                                             : 'Follow',
                                     style: const TextStyle(
                                         fontSize: 15,
