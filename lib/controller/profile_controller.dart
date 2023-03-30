@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
+import 'package:tiktok_clone/controller/auth_controller.dart';
 import 'package:tiktok_clone/model/user_model.dart';
 import 'package:tiktok_clone/utils/constants.dart';
 
 class ProfileController extends GetxController {
+  final AuthController authController = Get.put(AuthController());
   final Rx<Map<String, dynamic>> _user = Rx<Map<String, dynamic>>({});
   Map<String, dynamic> get user => _user.value;
   Rx<String> _uid = "".obs;
@@ -30,6 +32,7 @@ class ProfileController extends GetxController {
     int likes = 0;
     int followers = 0;
     int following = 0;
+    bool isFollowing = false;
 
     for (var item in myVideos.docs) {
       {
@@ -45,6 +48,71 @@ class ProfileController extends GetxController {
           .doc(_uid.value)
           .collection('following')
           .get();
+      firestore
+          .collection('users')
+          .doc(_uid.value)
+          .collection('followers')
+          .doc(authController.user!.uid)
+          .get()
+          .then((value) {
+        if (value.exists) {
+          isFollowing = true;
+        } else {
+          isFollowing = false;
+        }
+      });
+      _user.value = {
+        'followers': followers.toString(),
+        'following': following.toString(),
+        'isFollowing': isFollowing,
+        'likes': likes.toString(),
+        'profileImage': profileImage,
+        'username': name,
+        'thumbnail': thumbnails
+      };
+      update();
     }
+  }
+
+  followUser() async {
+    var doc = await firestore
+        .collection('users')
+        .doc(_uid.value)
+        .collection('followers')
+        .doc(authController.user!.uid)
+        .get();
+    if (!doc.exists) {
+      await firestore
+          .collection('users')
+          .doc(_uid.value)
+          .collection('followers')
+          .doc(authController.user!.uid)
+          .set({});
+      await firestore
+          .collection('users')
+          .doc(authController.user!.uid)
+          .collection('following')
+          .doc(_uid.value)
+          .set({});
+      _user.value
+          .update('followers', (value) => (int.parse(value) + 1).toString());
+    } else {
+      await firestore
+          .collection('users')
+          .doc(_uid.value)
+          .collection('followers')
+          .doc(authController.user!.uid)
+          .delete();
+      await firestore
+          .collection('users')
+          .doc(authController.user!.uid)
+          .collection('following')
+          .doc(_uid.value)
+          .delete();
+      _user.value
+          .update('followers', (value) => (int.parse(value) - 1).toString());
+    }
+    _user.value.update('isFollowing', (value) => !value);
+    update();
   }
 }
